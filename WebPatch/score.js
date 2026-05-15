@@ -5,15 +5,26 @@ import {
     Voice,
     Formatter,
     Accidental,
-    Stroke,
     TextDynamics,
 } from "https://cdn.jsdelivr.net/npm/vexflow@5.0.0/+esm";
 
+const mq = window.matchMedia("(orientation: portrait)");
 const el = document.getElementById("vexscore");
 var renderer = null;
 var context = null;
 var stave = null;
-var scaleFactor = 5;
+var scaleFactor = 0;
+var BASE_WIDTH = 600;
+
+// ─────────────────────────────────────
+function isPortrait() {
+    return window.innerHeight > window.innerWidth;
+}
+
+// ─────────────────────────────────────
+function computeScaleFactor(width) {
+    return Math.min(2, Math.max(0.5, width / BASE_WIDTH));
+}
 
 // ─────────────────────────────────────
 function getVexSize() {
@@ -37,16 +48,24 @@ function clearSVG() {
 function vexFlowInit() {
     clearSVG();
 
-    const size = getVexSize();
-    const width = size.width;
-    const height = size.height;
+    if (isPortrait()) {
+        alert("Por Favor, use modo paisagem para a obra");
+    }
+
+    const { width, height } = getVexSize();
+
+    scaleFactor = computeScaleFactor(width);
 
     renderer = new Renderer(el, Renderer.Backends.SVG);
     renderer.resize(width, height);
 
     context = renderer.getContext();
     context.scale(scaleFactor, scaleFactor);
-    stave = new Stave(1, 1, width / scaleFactor - scaleFactor);
+
+    const staveWidth = width / scaleFactor;
+    const staveHeight = height / scaleFactor;
+
+    stave = new Stave(1, 1, staveWidth - 2);
     stave.setContext(context);
 
     stave.addClef("treble");
@@ -156,7 +175,6 @@ function drawArpejo(notes, dyn, time) {
         dynamic.draw();
     }
 
-    console.log(time);
     if (time > 0) {
         const svg = context.svg;
         if (!svg) return;
@@ -263,13 +281,18 @@ window.onload = async function () {
         el.style.width = f + "%";
     });
 
+    Pd4Web.onFloatReceived("chordnumber", (_, f) => {
+        const el = document.querySelector(".progress-text");
+        if (!el) return;
+        el.innerText = `Momento ${f}`;
+    });
+
     // Init
     document.getElementById("pd4web-init").onclick = async function () {
         Pd4Web.init();
-        Pd4Web.sendFloat("init", 1);
 
         var value = (Math.floor(Math.random() * 5) + 7) * 1000;
-        console.log(value);
+        lastArpejoTime = (value - 30) / 2;
         Pd4Web.sendFloat("gesture-time", value);
 
         // FULLSCREEN
@@ -281,7 +304,23 @@ window.onload = async function () {
         const title = document.getElementById("title");
         title.style.display = "none";
         vexFlowInit();
+        Pd4Web.sendFloat("init", 1);
     };
 };
+
+function handleOrientationChange(e) {
+    if (e.matches) {
+        console.warn("Portrait mode detected");
+        document.getElementById("warning").textContent =
+            "Rotate device to horizontal mode for optimal score rendering.";
+    } else {
+        console.log("Landscape mode detected");
+        document.getElementById("warning").textContent = "";
+    }
+    window.location.reload();
+}
+
+// modern API
+mq.addEventListener("change", handleOrientationChange);
 
 window.drawArpejo = drawArpejo;
