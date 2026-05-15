@@ -74,7 +74,7 @@ target_link_options(
     PRIVATE
     -sMODULARIZE=1
     -sEXPORT_NAME='Pd4WebModule'
-    -sINITIAL_MEMORY=32MB
+    -sINITIAL_MEMORY=64MB
     -sEXPORT_ES6=${PD4WEB_AS_ES6}
     -sUSE_PTHREADS=1
     -sPTHREAD_POOL_SIZE=4

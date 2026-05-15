@@ -203,18 +203,17 @@ function drawNote(notes, dyn, tipo) {
     }
 }
 
+// ─────────────────────────────────────
 let wakeLock = null;
 
-// ─────────────────────────────────────
 async function requestWakeLock() {
     try {
-        if ("wakeLock" in navigator) {
-            wakeLock = await navigator.wakeLock.request("screen");
-
-            wakeLock.addEventListener("release", () => {
-                console.log("Wake Lock released");
-            });
-        }
+        if (!("wakeLock" in navigator)) return;
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => {
+            console.log("Wake Lock released");
+            wakeLock = null;
+        });
     } catch (err) {
         console.log("Wake Lock failed:", err);
     }
@@ -295,10 +294,8 @@ window.onload = async function () {
         lastArpejoTime = (value - 30) / 2;
         Pd4Web.sendFloat("gesture-time", value);
 
-        // FULLSCREEN
-        enterFullscreen();
-
         try {
+            enterFullscreen();
             await requestWakeLock();
         } catch (e) {
             console.error("WakeLock failed:", e);
