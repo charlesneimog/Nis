@@ -66,7 +66,8 @@ function chordinter:generate_chord_progression(chordA, chordB, steps)
 
 	for step = 0, steps - 1 do
 		local t_linear = step / (steps - 1)
-		local t = self:ease_exponential(t_linear, 5.0)
+		-- local t = self:ease_exponential(t_linear, 5.0)
+		local t = t_linear
 
 		local size = math.max(1, self:density(t))
 

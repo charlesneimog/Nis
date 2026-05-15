@@ -315,11 +315,8 @@ window.onload = async function () {
 function handleOrientationChange(e) {
     if (e.matches) {
         console.warn("Portrait mode detected");
-        document.getElementById("warning").textContent =
-            "Rotate device to horizontal mode for optimal score rendering.";
     } else {
         console.log("Landscape mode detected");
-        document.getElementById("warning").textContent = "";
     }
     window.location.reload();
 }
