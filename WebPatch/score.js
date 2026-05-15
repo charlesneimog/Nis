@@ -297,7 +297,12 @@ window.onload = async function () {
 
         // FULLSCREEN
         enterFullscreen();
-        await requestWakeLock();
+
+        try {
+            await requestWakeLock();
+        } catch (e) {
+            console.error("WakeLock failed:", e);
+        }
 
         const btn = document.getElementById("pd4web-init");
         btn.style.display = "none";
