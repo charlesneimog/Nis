@@ -286,6 +286,13 @@ window.onload = async function () {
         el.innerText = `Momento ${f}`;
     });
 
+    Pd4Web.onBangReceived("fim", (r) => {
+        const el = document.querySelector(".progress-text");
+        if (!el) return;
+        el.innerText = `Fim`;
+        document.getElementById("clock").textContent = "Fim";
+    });
+
     // Init
     document.getElementById("pd4web-init").onclick = async function () {
         Pd4Web.init();
