@@ -306,6 +306,8 @@ window.onload = async function () {
         const title = document.getElementById("title");
         title.style.display = "none";
         vexFlowInit();
+        const seed = Math.floor(Math.random() * 2147483647);
+        Pd4Web.sendFloat("luaseed", seed);
         Pd4Web.sendFloat("init", 1);
     };
 };

@@ -122,6 +122,17 @@
             <sigN>4</sigN>
             <sigD>4</sigD>
             </TimeSig>
+          <Spanner type="HairPin">
+            <HairPin>
+              <subtype>0</subtype>
+              <eid>nK6Onv4uFqF_q4cKPQFSCDB</eid>
+              </HairPin>
+            <next>
+              <location>
+                <measures>3</measures>
+                </location>
+              </next>
+            </Spanner>
           <Chord>
             <eid>VPcBII6qBpH_xEVXcMtk7UE</eid>
             <durationType>whole</durationType>
@@ -235,6 +246,18 @@
       <Measure>
         <eid>xqo7bI+GtxB_NRRLy6fyBVK</eid>
         <voice>
+          <Dynamic>
+            <subtype>ppp</subtype>
+            <velocity>16</velocity>
+            <eid>Ox4xTpZMbkB_Bn39qLuaAGB</eid>
+            </Dynamic>
+          <Spanner type="HairPin">
+            <prev>
+              <location>
+                <measures>-3</measures>
+                </location>
+              </prev>
+            </Spanner>
           <Chord>
             <eid>ZWkxRNig7HG_MjawacC1q3M</eid>
             <durationType>whole</durationType>
@@ -269,6 +292,11 @@
       <Measure>
         <eid>gBOr52PnAD_whL8sx1/g2B</eid>
         <voice>
+          <Dynamic>
+            <subtype>fff</subtype>
+            <velocity>126</velocity>
+            <eid>bG+VVN2G5wF_nrgjKdBR/EM</eid>
+            </Dynamic>
           <Chord>
             <eid>4ky2FxRjrYD_8K1vbcrPGSC</eid>
             <durationType>whole</durationType>
@@ -357,6 +385,11 @@
       <Measure>
         <eid>mpNJp9PfhOM_858TiEpCH4O</eid>
         <voice>
+          <Dynamic>
+            <subtype>ppp</subtype>
+            <velocity>16</velocity>
+            <eid>zZNRmwhCHiG_NdvMG75lkyP</eid>
+            </Dynamic>
           <Chord>
             <eid>Zb1op1wslxP_bTi1EiuEsQK</eid>
             <durationType>whole</durationType>
