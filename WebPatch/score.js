@@ -341,7 +341,6 @@ function drawNote(notes, dyn, tipo) {
 let wakeLock = null;
 let noSleepVideo = null;
 
-// ─────────────────────────────────────
 async function requestWakeLock() {
     // Preferred API (Android Chrome, some modern browsers)
     if ("wakeLock" in navigator) {
@@ -365,36 +364,7 @@ async function requestWakeLock() {
 }
 
 // ─────────────────────────────────────
-function enableIOSWakeLock() {
-    if (noSleepVideo) return;
-
-    noSleepVideo = document.createElement("video");
-
-    noSleepVideo.src = "/blank.mp4"; // tiny silent looping video
-    noSleepVideo.loop = true;
-    noSleepVideo.muted = true;
-    noSleepVideo.playsInline = true;
-
-    noSleepVideo.style.position = "fixed";
-    noSleepVideo.style.opacity = "0";
-    noSleepVideo.style.pointerEvents = "none";
-    noSleepVideo.style.width = "1px";
-    noSleepVideo.style.height = "1px";
-
-    document.body.appendChild(noSleepVideo);
-
-    const playPromise = noSleepVideo.play();
-
-    if (playPromise !== undefined) {
-        playPromise
-            .then(() => {
-                console.log("iOS wake lock fallback active");
-            })
-            .catch((err) => {
-                console.log("Video wake lock failed:", err);
-            });
-    }
-}
+function enableIOSWakeLock() {}
 
 // ─────────────────────────────────────
 async function releaseWakeLock() {
@@ -484,50 +454,60 @@ window.onload = async function () {
     document.getElementById("pd4web-init").onclick = async function () {
         try {
             const root = document.documentElement;
+            const isiOS =
+                /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
-            // Fullscreen FIRST
-            // Must happen directly from user gesture
-            if (root.requestFullscreen) {
-                await root.requestFullscreen();
-            } else if (root.webkitRequestFullscreen) {
-                await root.webkitRequestFullscreen();
+            try {
+                if (root.requestFullscreen) {
+                    await root.requestFullscreen();
+                } else if (root.webkitRequestFullscreen) {
+                    root.webkitRequestFullscreen();
+                }
+            } catch (err) {
+                console.warn("Fullscreen failed:", err);
             }
 
-            // Orientation lock
-            // Android: usually works
-            // iOS: ignored silently
-            if (screen.orientation?.lock) {
-                try {
+            try {
+                if (screen.orientation?.lock) {
                     await screen.orientation.lock("landscape");
                     console.log("Landscape locked");
-                } catch (err) {
-                    console.warn("Orientation lock failed:", err);
                 }
+            } catch (err) {
+                console.warn("Orientation lock failed:", err);
             }
 
-            // If still portrait, stop here
             if (isPortrait()) {
                 alert("Gire o celular para modo paisagem");
-                return;
+                await new Promise((resolve) => {
+                    function checkOrientation() {
+                        if (window.innerWidth > window.innerHeight) {
+                            window.removeEventListener("resize", checkOrientation);
+                            window.removeEventListener("orientationchange", checkOrientation);
+                            resolve();
+                        }
+                    }
+                    window.addEventListener("resize", checkOrientation);
+                    window.addEventListener("orientationchange", checkOrientation);
+                    checkOrientation();
+                });
             }
 
-            // Wake lock
-            await requestWakeLock();
+            try {
+                await requestWakeLock();
+            } catch (err) {
+                console.warn("Wake lock failed:", err);
+            }
 
-            // Start Pd4Web
             Pd4Web.init();
             const value = (Math.floor(Math.random() * 5) + 7) * 1000;
             lastArpejoTime = (value - 30) / 2;
             Pd4Web.sendFloat("gesture-time", value);
-
-            // Hide UI
             document.getElementById("pd4web-init").style.display = "none";
             document.getElementById("title").style.display = "none";
-
             document.querySelectorAll(".composer-label").forEach((el) => {
                 el.style.display = "none";
             });
-
             vexFlowInit();
             await startCompass();
             const seed = Math.floor(Math.random() * 2147483647);
