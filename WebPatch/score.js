@@ -36,8 +36,9 @@ async function startCompass() {
     window.addEventListener(
         "deviceorientation",
         (event) => {
-            // iPhone/iOS
-            let heading;
+            let heading = null;
+
+            // iOS
             if (event.webkitCompassHeading !== undefined) {
                 heading = event.webkitCompassHeading;
             }
@@ -46,12 +47,30 @@ async function startCompass() {
             else if (event.alpha !== null) {
                 heading = 360 - event.alpha;
             }
-            if (heading !== undefined) {
-                arrow.style.transform = `rotate(${-heading}deg)`;
-            }
+
+            if (heading === null) return;
+            arrow.style.transform = `translate(-50%, -50%) rotate(${-heading}deg)`;
         },
         true,
     );
+}
+
+// ─────────────────────────────────────
+async function lockLandscape() {
+    try {
+        // Must usually be inside a user gesture
+        if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen();
+        }
+
+        // Orientation API
+        if (screen.orientation && screen.orientation.lock) {
+            await screen.orientation.lock("landscape");
+            console.log("Landscape locked");
+        }
+    } catch (err) {
+        console.warn("Orientation lock failed:", err);
+    }
 }
 
 // ─────────────────────────────────────
@@ -351,8 +370,12 @@ window.onload = async function () {
         btn.style.display = "none";
         const title = document.getElementById("title");
         title.style.display = "none";
+
+        // init
         vexFlowInit();
         startCompass();
+        lockLandscape();
+
         const seed = Math.floor(Math.random() * 2147483647);
         Pd4Web.sendFloat("luaseed", seed);
         Pd4Web.sendFloat("init", 1);
