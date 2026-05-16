@@ -59,9 +59,6 @@
 #X msg 2 93 0 \, 1 60000;
 #X msg 292 90 60000;
 #X obj 4 383 t a b b b, f 47;
-#X obj 422 445 nth-random;
-#X msg 422 412 list N S E O;
-#X obj 422 508 s point-to-where;
 #X connect 5 0 14 0;
 #X connect 6 0 9 0;
 #X connect 7 0 0 0;
@@ -104,6 +101,3 @@
 #X connect 40 0 23 0;
 #X connect 40 1 34 0;
 #X connect 40 2 6 0;
-#X connect 40 3 42 0;
-#X connect 41 0 43 0;
-#X connect 42 0 41 0;

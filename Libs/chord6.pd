@@ -66,9 +66,6 @@
 #X obj 357 267 t b b, f 8;
 #X obj 2 178 t f f f, f 26;
 #X obj 173 178 t f f;
-#X obj 422 445 nth-random;
-#X msg 422 412 list N S E O;
-#X obj 422 508 s point-to-where;
 #X obj 4 403 t a b b b, f 47;
 #X connect 5 0 14 0;
 #X connect 6 0 9 0;
@@ -86,7 +83,7 @@
 #X connect 17 0 38 0;
 #X connect 18 0 19 0;
 #X connect 19 0 15 0;
-#X connect 20 0 51 0;
+#X connect 20 0 48 0;
 #X connect 21 0 22 0;
 #X connect 22 0 27 0;
 #X connect 23 0 24 0;
@@ -117,9 +114,6 @@
 #X connect 46 2 40 0;
 #X connect 47 0 28 1;
 #X connect 47 1 15 1;
-#X connect 48 0 50 0;
-#X connect 49 0 48 0;
-#X connect 51 0 23 0;
-#X connect 51 1 39 0;
-#X connect 51 2 6 0;
-#X connect 51 3 49 0;
+#X connect 48 0 23 0;
+#X connect 48 1 39 0;
+#X connect 48 2 6 0;

@@ -137,7 +137,6 @@ async function lockLandscape() {
         // Orientation lock
         if (screen.orientation && screen.orientation.lock) {
             await screen.orientation.lock("landscape");
-
             console.log("Landscape locked");
         } else {
             console.log("Orientation lock API not supported");
@@ -406,7 +405,6 @@ window.onload = async function () {
     });
 
     Pd4Web.onSymbolReceived("point-to-where", (_, s) => {
-        console.log(s);
         lastPoint = s;
     });
 
@@ -452,8 +450,8 @@ window.onload = async function () {
 
         // init
         vexFlowInit();
-        startCompass();
-        lockLandscape();
+        await startCompass();
+        await lockLandscape();
 
         const seed = Math.floor(Math.random() * 2147483647);
         Pd4Web.sendFloat("luaseed", seed);
