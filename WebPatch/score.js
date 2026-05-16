@@ -305,7 +305,12 @@ function drawArpejo(notes, dyn, time, point) {
         dynamic.draw();
     }
 
-    var colors = { N: "red", S: "blue", W: "yellow", E: "green" };
+    const colors = {
+        N: "#E53935", // red
+        S: "#1565C0", // blue
+        W: "#FDD835", // amber/yellow
+        E: "#43A047", // green
+    };
 
     if (time > 0) {
         const svg = context.svg;
