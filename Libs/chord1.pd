@@ -1,4 +1,4 @@
-#N canvas 0 0 925 1132 10;
+#N canvas 0 0 1299 1132 10;
 #X obj 4 514 s note;
 #X obj 143 512 s dynamic;
 #X obj 283 510 s tipo;
