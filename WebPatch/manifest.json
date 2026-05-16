@@ -15,7 +15,7 @@
         }
     ],
     "name": "Nis",
-    "orientation": "landscape",
+    "orientation": "any",
     "screenshots": "",
     "short_name": "Nis",
     "start_url": "index.html",

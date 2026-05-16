@@ -87,8 +87,7 @@ function getCompassColor(angle) {
             const r = Math.round(lerp(start.color[0], end.color[0], t));
             const g = Math.round(lerp(start.color[1], end.color[1], t));
             const b = Math.round(lerp(start.color[2], end.color[2], t));
-
-            return `rgb(${r}, ${g}, ${b})`;
+            return `rgba(${r}, ${g}, ${b}, 0.32)`;
         }
     }
 }
@@ -250,7 +249,7 @@ function drawLonga(notes, dyn) {
 }
 
 // ─────────────────────────────────────
-function drawArpejo(notes, dyn, time) {
+function drawArpejo(notes, dyn, time, point) {
     if (notes.length == 0) {
         return;
     }
@@ -309,19 +308,18 @@ function drawArpejo(notes, dyn, time) {
         dynamic.draw();
     }
 
+    var colors = { N: "red", S: "blue", W: "yellow", E: "green" };
+
     if (time > 0) {
         const svg = context.svg;
         if (!svg) return;
-
         const noteGroups = Array.from(svg.querySelectorAll("g")).filter((g) => g.querySelector(".vf-notehead"));
-
         for (let i = 0; i < noteGroups.length; i++) {
             setTimeout(() => {
                 const head = noteGroups[i].querySelector(".vf-notehead");
                 if (!head) return;
-
-                head.setAttribute("fill", "red");
-                head.setAttribute("stroke", "red");
+                head.setAttribute("fill", colors[point]);
+                head.setAttribute("stroke", colors[point]);
             }, time * i);
         }
     }
@@ -379,6 +377,7 @@ window.onload = async function () {
     var lastDynamic = "pp";
     var lastTipo = "Longa";
     var lastArpejoTime = null;
+    var lastPoint = "N";
 
     // Receivers
     Pd4Web.onFloatReceived("time", (_, f) => {
@@ -391,7 +390,7 @@ window.onload = async function () {
     });
 
     Pd4Web.onListReceived("note", (_, l) => {
-        drawArpejo(l, lastDynamic, lastArpejoTime);
+        drawArpejo(l, lastDynamic, lastArpejoTime, lastPoint);
     });
 
     Pd4Web.onSymbolReceived("dynamic", (_, s) => {
@@ -407,13 +406,14 @@ window.onload = async function () {
     });
 
     Pd4Web.onSymbolReceived("point-to-where", (_, s) => {
+        console.log(s);
         lastPoint = s;
     });
 
     // GUI
     Pd4Web.onFloatReceived("bar", (_, f) => {
-        const el = document.getElementById("bar");
-        el.style.width = f + "%";
+        // const el = document.getElementById("bar");
+        // el.style.width = f + "%";
     });
 
     Pd4Web.onFloatReceived("chordnumber", (_, f) => {});
