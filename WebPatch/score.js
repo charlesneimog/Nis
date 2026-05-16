@@ -50,6 +50,7 @@ function vexFlowInit() {
 
     if (isPortrait()) {
         alert("Por Favor, use modo paisagem para a obra");
+        return;
     }
 
     const { width, height } = getVexSize();
@@ -63,9 +64,8 @@ function vexFlowInit() {
     context.scale(scaleFactor, scaleFactor);
 
     const staveWidth = width / scaleFactor;
-    const staveHeight = height / scaleFactor;
 
-    stave = new Stave(1, 1, staveWidth - 2);
+    stave = new Stave(1, 1, staveWidth - 4);
     stave.setContext(context);
 
     stave.addClef("treble");
@@ -287,10 +287,11 @@ window.onload = async function () {
     });
 
     Pd4Web.onBangReceived("fim", (r) => {
-        const el = document.querySelector(".progress-text");
+        const el = document.getElementById("progress-text");
         if (!el) return;
         el.innerText = `Fim`;
         document.getElementById("clock").textContent = "Fim";
+        context.clear();
     });
 
     // Init

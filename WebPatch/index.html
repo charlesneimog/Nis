@@ -181,7 +181,7 @@
 
     <body>
         <div id="title" style="margin-top: 1%; display: flex; justify-content: center">
-            <h2 style="color: black">NIS</h2>
+            <h1 style="color: black">NIS</h1>
         </div>
         <div style="display: flex; justify-content: center">
             <button id="pd4web-init" class="btn-obra">Iniciar obra</button>
@@ -189,7 +189,13 @@
 
         <div
             id="vexscore"
-            style="margin: auto; border-radius: 5px; margin-top: 1%; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25)"
+            style="
+                margin: auto;
+                height: 40vh;
+                border-radius: 5px;
+                margin-top: 1%;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            "
         ></div>
         <div style="margin-top: 1%; display: flex; justify-content: center">
             <p id="clock">00:00</p>
@@ -211,7 +217,7 @@
         <script type="module" src="score.js"></script>
         <div class="progress">
             <div class="progress-bar" id="bar" style="width: 0%"></div>
-            <span class="progress-text">Momento 1</span>
+            <span class="progress-text" id="progress-text">Momento 1</span>
         </div>
     </body>
 </html>
