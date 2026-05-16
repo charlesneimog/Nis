@@ -15,12 +15,15 @@ var context = null;
 var stave = null;
 var scaleFactor = 0;
 var BASE_WIDTH = 600;
-const arrow = document.getElementById("arrow");
 
 //╭─────────────────────────────────────╮
 //│            ALWAYS NORTH             │
 //╰─────────────────────────────────────╯
+const rotating = document.getElementById("compass-rotating");
+let currentHeading = 0;
+
 async function startCompass() {
+    // iOS permission
     if (
         typeof DeviceOrientationEvent !== "undefined" &&
         typeof DeviceOrientationEvent.requestPermission === "function"
@@ -38,7 +41,7 @@ async function startCompass() {
         (event) => {
             let heading = null;
 
-            // iOS
+            // iPhone
             if (event.webkitCompassHeading !== undefined) {
                 heading = event.webkitCompassHeading;
             }
@@ -49,27 +52,61 @@ async function startCompass() {
             }
 
             if (heading === null) return;
-            arrow.style.transform = `translate(-50%, -50%) rotate(${-heading}deg)`;
+
+            animateCompass(heading);
         },
         true,
     );
 }
 
 // ─────────────────────────────────────
+function animateCompass(targetHeading) {
+    // shortest rotation path
+    let delta = targetHeading - currentHeading;
+
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+
+    currentHeading += delta * 0.15;
+
+    rotating.style.transform = `rotate(${-currentHeading}deg)`;
+
+    requestAnimationFrame(() => animateCompass(targetHeading));
+}
+
+// ─────────────────────────────────────
 async function lockLandscape() {
     try {
-        // Must usually be inside a user gesture
+        // ANDROID
         if (document.documentElement.requestFullscreen) {
             await document.documentElement.requestFullscreen();
         }
 
-        // Orientation API
+        // iPHONE / iPAD SAFARI
+        else if (document.documentElement.webkitRequestFullscreen) {
+            await document.documentElement.webkitRequestFullscreen();
+        }
+
+        // Older iOS fallback
+        else if (document.documentElement.webkitEnterFullscreen) {
+            await document.documentElement.webkitEnterFullscreen();
+        }
+
+        // Small delay improves Android reliability
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // Orientation lock
         if (screen.orientation && screen.orientation.lock) {
             await screen.orientation.lock("landscape");
+
             console.log("Landscape locked");
+        } else {
+            console.log("Orientation lock API not supported");
         }
     } catch (err) {
-        console.warn("Orientation lock failed:", err);
+        console.error(err);
+
+        // alert("Orientation lock failed: " + err.message);
     }
 }
 
