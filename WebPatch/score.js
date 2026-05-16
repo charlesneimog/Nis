@@ -15,6 +15,44 @@ var context = null;
 var stave = null;
 var scaleFactor = 0;
 var BASE_WIDTH = 600;
+const arrow = document.getElementById("arrow");
+
+//╭─────────────────────────────────────╮
+//│            ALWAYS NORTH             │
+//╰─────────────────────────────────────╯
+async function startCompass() {
+    if (
+        typeof DeviceOrientationEvent !== "undefined" &&
+        typeof DeviceOrientationEvent.requestPermission === "function"
+    ) {
+        const permission = await DeviceOrientationEvent.requestPermission();
+
+        if (permission !== "granted") {
+            alert("Permissão negada");
+            return;
+        }
+    }
+
+    window.addEventListener(
+        "deviceorientation",
+        (event) => {
+            // iPhone/iOS
+            let heading;
+            if (event.webkitCompassHeading !== undefined) {
+                heading = event.webkitCompassHeading;
+            }
+
+            // Android
+            else if (event.alpha !== null) {
+                heading = 360 - event.alpha;
+            }
+            if (heading !== undefined) {
+                arrow.style.transform = `rotate(${-heading}deg)`;
+            }
+        },
+        true,
+    );
+}
 
 // ─────────────────────────────────────
 function isPortrait() {
@@ -314,6 +352,7 @@ window.onload = async function () {
         const title = document.getElementById("title");
         title.style.display = "none";
         vexFlowInit();
+        startCompass();
         const seed = Math.floor(Math.random() * 2147483647);
         Pd4Web.sendFloat("luaseed", seed);
         Pd4Web.sendFloat("init", 1);
