@@ -1,4 +1,4 @@
-#N canvas 0 0 1672 1132 10;
+#N canvas 0 0 1860 1132 10;
 #X declare -lib pdlua;
 #X declare -lib else;
 #X declare -path Libs;
@@ -22,8 +22,8 @@
 #X obj 4 505 r tipo;
 #X text 73 61 TIPOS: longa \, arpejo \, trilo;
 #X obj 694 399 r bar-width;
-#X obj 760 433 loadbang;
-#X obj 760 455 metro 50;
+#X obj 753 441 loadbang;
+#X obj 753 463 metro 50;
 #X obj 679 504 f;
 #X obj 679 526 s bar;
 #X obj 694 421 nbx 5 16 -1e+37 1e+37 0 0 empty empty empty 0 -9 0 10 #fcfcfc #000000 #000000 0 256;
