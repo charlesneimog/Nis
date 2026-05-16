@@ -339,17 +339,74 @@ function drawNote(notes, dyn, tipo) {
 
 // ─────────────────────────────────────
 let wakeLock = null;
+let noSleepVideo = null;
 
+// ─────────────────────────────────────
 async function requestWakeLock() {
-    try {
-        if (!("wakeLock" in navigator)) return;
-        wakeLock = await navigator.wakeLock.request("screen");
-        wakeLock.addEventListener("release", () => {
-            console.log("Wake Lock released");
-            wakeLock = null;
-        });
-    } catch (err) {
-        console.log("Wake Lock failed:", err);
+    // Preferred API (Android Chrome, some modern browsers)
+    if ("wakeLock" in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request("screen");
+
+            wakeLock.addEventListener("release", () => {
+                console.log("Wake Lock released");
+                wakeLock = null;
+            });
+
+            console.log("Native wake lock active");
+            return;
+        } catch (err) {
+            console.log("Wake Lock failed:", err);
+        }
+    }
+
+    // iPhone fallback
+    enableIOSWakeLock();
+}
+
+// ─────────────────────────────────────
+function enableIOSWakeLock() {
+    if (noSleepVideo) return;
+
+    noSleepVideo = document.createElement("video");
+
+    noSleepVideo.src = "/blank.mp4"; // tiny silent looping video
+    noSleepVideo.loop = true;
+    noSleepVideo.muted = true;
+    noSleepVideo.playsInline = true;
+
+    noSleepVideo.style.position = "fixed";
+    noSleepVideo.style.opacity = "0";
+    noSleepVideo.style.pointerEvents = "none";
+    noSleepVideo.style.width = "1px";
+    noSleepVideo.style.height = "1px";
+
+    document.body.appendChild(noSleepVideo);
+
+    const playPromise = noSleepVideo.play();
+
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log("iOS wake lock fallback active");
+            })
+            .catch((err) => {
+                console.log("Video wake lock failed:", err);
+            });
+    }
+}
+
+// ─────────────────────────────────────
+async function releaseWakeLock() {
+    if (wakeLock) {
+        await wakeLock.release();
+        wakeLock = null;
+    }
+
+    if (noSleepVideo) {
+        noSleepVideo.pause();
+        noSleepVideo.remove();
+        noSleepVideo = null;
     }
 }
 
