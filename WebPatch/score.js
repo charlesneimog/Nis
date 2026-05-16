@@ -342,10 +342,8 @@ window.onload = async function () {
 
     // Receivers
     Pd4Web.onFloatReceived("time", (_, f) => {
-        const minutes = Math.floor(f / 60);
-        const seconds = Math.floor(f % 60);
-        document.getElementById("clock").textContent =
-            `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+        // const minutes = Math.floor(f / 60);
+        // const seconds = Math.floor(f % 60);
     });
 
     Pd4Web.onSymbolReceived("note", (_, s) => {
