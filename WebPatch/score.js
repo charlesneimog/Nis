@@ -143,8 +143,6 @@ async function lockLandscape() {
         }
     } catch (err) {
         console.error(err);
-
-        // alert("Orientation lock failed: " + err.message);
     }
 }
 
@@ -422,40 +420,60 @@ window.onload = async function () {
 
     // Init
     document.getElementById("pd4web-init").onclick = async function () {
-        if (isPortrait()) {
-            alert("Gire o celular primeiro!");
-            return;
-        }
-        Pd4Web.init();
-
-        var value = (Math.floor(Math.random() * 5) + 7) * 1000;
-        lastArpejoTime = (value - 30) / 2;
-        Pd4Web.sendFloat("gesture-time", value);
-
         try {
-            enterFullscreen();
+            const root = document.documentElement;
+
+            // Fullscreen FIRST
+            // Must happen directly from user gesture
+            if (root.requestFullscreen) {
+                await root.requestFullscreen();
+            } else if (root.webkitRequestFullscreen) {
+                await root.webkitRequestFullscreen();
+            }
+
+            // Orientation lock
+            // Android: usually works
+            // iOS: ignored silently
+            if (screen.orientation?.lock) {
+                try {
+                    await screen.orientation.lock("landscape");
+                    console.log("Landscape locked");
+                } catch (err) {
+                    console.warn("Orientation lock failed:", err);
+                }
+            }
+
+            // If still portrait, stop here
+            if (isPortrait()) {
+                alert("Gire o celular para modo paisagem");
+                return;
+            }
+
+            // Wake lock
             await requestWakeLock();
-        } catch (e) {
-            console.error("WakeLock failed:", e);
+
+            // Start Pd4Web
+            Pd4Web.init();
+            const value = (Math.floor(Math.random() * 5) + 7) * 1000;
+            lastArpejoTime = (value - 30) / 2;
+            Pd4Web.sendFloat("gesture-time", value);
+
+            // Hide UI
+            document.getElementById("pd4web-init").style.display = "none";
+            document.getElementById("title").style.display = "none";
+
+            document.querySelectorAll(".composer-label").forEach((el) => {
+                el.style.display = "none";
+            });
+
+            vexFlowInit();
+            await startCompass();
+            const seed = Math.floor(Math.random() * 2147483647);
+            Pd4Web.sendFloat("luaseed", seed);
+            Pd4Web.sendFloat("init", 1);
+        } catch (err) {
+            console.error("Initialization failed:", err);
         }
-
-        const btn = document.getElementById("pd4web-init");
-        btn.style.display = "none";
-        const title = document.getElementById("title");
-        title.style.display = "none";
-
-        document.querySelectorAll(".composer-label").forEach((el) => {
-            el.style.display = "none";
-        });
-
-        // init
-        vexFlowInit();
-        await startCompass();
-        await lockLandscape();
-
-        const seed = Math.floor(Math.random() * 2147483647);
-        Pd4Web.sendFloat("luaseed", seed);
-        Pd4Web.sendFloat("init", 1);
     };
 };
 
