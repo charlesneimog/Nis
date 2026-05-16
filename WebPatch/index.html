@@ -15,26 +15,20 @@
 
         <script src="./pd4web.js"></script>
         <style>
+            @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+
             :root {
                 --bg: #f4f6f9;
                 --fg: rgba(20, 25, 31, 0.92);
                 --panel: rgba(255, 255, 255, 0.75);
                 --shadow: rgba(15, 23, 42, 0.12) 0px 2px 4px, rgba(15, 23, 42, 0.22) 0px 10px 24px;
-            }
-
-            @media (prefers-color-scheme: dark) {
-                :root {
-                    --bg: #171b20;
-                    --fg: rgba(255, 255, 255, 0.9);
-                    --panel: rgba(36, 40, 46, 0.7);
-                    --shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px, rgba(0, 0, 0, 0.45) 0px 12px 28px;
-                }
+                --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
             }
 
             body {
                 margin: 0;
                 touch-action: pan-x pan-y;
-                color: var(--fg);
+                font-family: var(--font-sans);
             }
 
             span {
@@ -189,6 +183,53 @@
                 transform-box: view-box;
                 transform-origin: 100px 100px;
             }
+
+            .academic-button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+
+                height: 48px;
+                padding: 0 1.5rem;
+
+                background: transparent;
+                color: #000000;
+
+                border: 1px solid #000000;
+                border-radius: 4px;
+
+                font-size: 14px;
+                font-weight: 500;
+                letter-spacing: 0.02em;
+
+                cursor: pointer;
+
+                transition:
+                    background-color 160ms ease,
+                    color 160ms ease,
+                    border-color 160ms ease;
+            }
+
+            .academic-button:hover {
+                background: #000000;
+                color: #ffffff;
+            }
+
+            .academic-button:focus-visible {
+                outline: none;
+                border-width: 2px;
+            }
+
+            .composer-label {
+                margin-right: 10%;
+                font-size: 10px;
+                font-weight: 500;
+                line-height: 1.4;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: #666666;
+                text-align: right;
+            }
         </style>
     </head>
 
@@ -196,12 +237,21 @@
         <div id="title" style="margin-top: 1%; display: flex; justify-content: center">
             <h1 style="color: black">NIS</h1>
         </div>
+        <p class="composer-label">Cassia Carrascoza</p>
+        <p class="composer-label">Charles K. Neimog</p>
         <div style="display: flex; justify-content: center">
-            <button id="pd4web-init" class="btn-obra">Iniciar obra</button>
+            <button id="pd4web-init" class="academic-button">Iniciar Obra</button>
         </div>
 
         <div style="display: flex; justify-content: center; margin-top: 20px">
-            <svg id="compass" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100" height="100">
+            <svg
+                style="border: 1px"
+                id="compass"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 200 200"
+                width="100"
+                height="100"
+            >
                 <!-- STATIC RINGS -->
                 <circle cx="100" cy="100" r="90" fill="none" stroke="#333" stroke-width="8" />
 
@@ -218,7 +268,7 @@
                         font-weight="bold"
                         font-size="20"
                         text-anchor="middle"
-                        fill="#333"
+                        fill="#E53935"
                     >
                         N
                     </text>
@@ -230,7 +280,7 @@
                         font-weight="bold"
                         font-size="20"
                         text-anchor="middle"
-                        fill="#333"
+                        fill="#1565C0"
                     >
                         S
                     </text>
@@ -242,7 +292,7 @@
                         font-weight="bold"
                         font-size="20"
                         text-anchor="middle"
-                        fill="#333"
+                        fill="#43A047"
                     >
                         E
                     </text>
@@ -254,7 +304,7 @@
                         font-weight="bold"
                         font-size="20"
                         text-anchor="middle"
-                        fill="#333"
+                        fill="#FDD835"
                     >
                         W
                     </text>
@@ -286,7 +336,9 @@
                 border-radius: 5px;
                 margin-top: 1%;
                 margin-bottom: 1%;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+                box-shadow:
+                    0 10px 30px rgba(0, 0, 0, 0.32),
+                    0 4px 8px rgba(0, 0, 0, 0.22);
             "
         ></div>
         <script>
@@ -304,9 +356,5 @@
             })();
         </script>
         <script type="module" src="score.js"></script>
-        <div class="progress">
-            <div class="progress-bar" id="bar" style="width: 0%"></div>
-            <span class="progress-text" id="progress-text">Momento 1</span>
-        </div>
     </body>
 </html>

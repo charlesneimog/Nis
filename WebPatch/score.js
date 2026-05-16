@@ -60,8 +60,41 @@ async function startCompass() {
 }
 
 // ─────────────────────────────────────
+const directionColors = [
+    { angle: 0, color: [229, 57, 53] }, // N
+    { angle: 90, color: [67, 160, 71] }, // E
+    { angle: 180, color: [21, 101, 192] }, // S
+    { angle: 270, color: [253, 216, 53] }, // W
+    { angle: 360, color: [229, 57, 53] }, // wrap to N
+];
+
+// ─────────────────────────────────────
+function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+
+// ─────────────────────────────────────
+function getCompassColor(angle) {
+    angle = (angle + 360) % 360;
+
+    for (let i = 0; i < directionColors.length - 1; i++) {
+        const start = directionColors[i];
+        const end = directionColors[i + 1];
+
+        if (angle >= start.angle && angle <= end.angle) {
+            const t = (angle - start.angle) / (end.angle - start.angle);
+
+            const r = Math.round(lerp(start.color[0], end.color[0], t));
+            const g = Math.round(lerp(start.color[1], end.color[1], t));
+            const b = Math.round(lerp(start.color[2], end.color[2], t));
+
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+    }
+}
+
+// ─────────────────────────────────────
 function animateCompass(targetHeading) {
-    // shortest rotation path
     let delta = targetHeading - currentHeading;
 
     if (delta > 180) delta -= 360;
@@ -70,6 +103,13 @@ function animateCompass(targetHeading) {
     currentHeading += delta * 0.15;
 
     rotating.style.transform = `rotate(${-currentHeading}deg)`;
+
+    const glow = getCompassColor(currentHeading);
+
+    vexscore.style.boxShadow = `
+        0 0 12px ${glow},
+        0 0 28px ${glow}
+    `;
 
     requestAnimationFrame(() => animateCompass(targetHeading));
 }
@@ -366,28 +406,28 @@ window.onload = async function () {
         lastTipo = s;
     });
 
+    Pd4Web.onSymbolReceived("point-to-where", (_, s) => {
+        lastPoint = s;
+    });
+
     // GUI
     Pd4Web.onFloatReceived("bar", (_, f) => {
         const el = document.getElementById("bar");
         el.style.width = f + "%";
     });
 
-    Pd4Web.onFloatReceived("chordnumber", (_, f) => {
-        const el = document.querySelector(".progress-text");
-        if (!el) return;
-        el.innerText = `Momento ${f}`;
-    });
+    Pd4Web.onFloatReceived("chordnumber", (_, f) => {});
 
     Pd4Web.onBangReceived("fim", (r) => {
-        const el = document.getElementById("progress-text");
-        if (!el) return;
-        el.innerText = `Fim`;
-        document.getElementById("clock").textContent = "Fim";
         context.clear();
     });
 
     // Init
     document.getElementById("pd4web-init").onclick = async function () {
+        if (isPortrait()) {
+            alert("Gire o celular primeiro!");
+            return;
+        }
         Pd4Web.init();
 
         var value = (Math.floor(Math.random() * 5) + 7) * 1000;
@@ -406,6 +446,10 @@ window.onload = async function () {
         const title = document.getElementById("title");
         title.style.display = "none";
 
+        document.querySelectorAll(".composer-label").forEach((el) => {
+            el.style.display = "none";
+        });
+
         // init
         vexFlowInit();
         startCompass();
@@ -417,6 +461,7 @@ window.onload = async function () {
     };
 };
 
+// ─────────────────────────────────────
 function handleOrientationChange(e) {
     if (e.matches) {
         console.warn("Portrait mode detected");
