@@ -142,7 +142,7 @@ async function lockLandscape() {
             console.log("Orientation lock API not supported");
         }
     } catch (err) {
-        console.error(err);
+      
     }
 }
 
@@ -380,20 +380,6 @@ async function releaseWakeLock() {
     }
 }
 
-// ─────────────────────────────────────
-function enterFullscreen() {
-    const el = document.documentElement;
-
-    if (el.requestFullscreen) {
-        el.requestFullscreen();
-    } else if (el.webkitRequestFullscreen) {
-        // Safari
-        el.webkitRequestFullscreen();
-    } else if (el.msRequestFullscreen) {
-        el.msRequestFullscreen();
-    }
-}
-
 //╭─────────────────────────────────────╮
 //│                Init                 │
 //╰─────────────────────────────────────╯
@@ -453,15 +439,21 @@ window.onload = async function () {
     // Init
     document.getElementById("pd4web-init").onclick = async function () {
         try {
-            const isiOS =
+            const isApple =
                 /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                 (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+            const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+            console.log("navigator.userAgent:", navigator.userAgent);
+            console.log("navigator.platform:", navigator.platform);
+            console.log("navigator.maxTouchPoints:", navigator.maxTouchPoints);
 
             try {
-                if (!isiOS) {
+                if (!isiOS && navigator.platform !== "MacIntel") {
                     await document.documentElement.requestFullscreen();
                     await lockLandscape();
-                    
+                } else {
+                    console.log("iOS detected, skipping fullscreen");
                 }
                 
             } catch (err) {
@@ -469,28 +461,12 @@ window.onload = async function () {
             }
 
             try {
-                if (screen.orientation?.lock) {
+                if (screen?.orientation?.lock) {
                     await screen.orientation.lock("landscape");
                     console.log("Landscape locked");
                 }
             } catch (err) {
                 console.warn("Orientation lock failed:", err);
-            }
-
-            if (isPortrait()) {
-                alert("Gire o celular para modo paisagem");
-                await new Promise((resolve) => {
-                    function checkOrientation() {
-                        if (window.innerWidth > window.innerHeight) {
-                            window.removeEventListener("resize", checkOrientation);
-                            window.removeEventListener("orientationchange", checkOrientation);
-                            resolve();
-                        }
-                    }
-                    window.addEventListener("resize", checkOrientation);
-                    window.addEventListener("orientationchange", checkOrientation);
-                    checkOrientation();
-                });
             }
 
             try {
