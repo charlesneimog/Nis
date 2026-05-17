@@ -461,9 +461,7 @@ window.onload = async function () {
             try {
                 if (root.requestFullscreen) {
                     await root.requestFullscreen();
-                } else if (root.webkitRequestFullscreen) {
-                    root.webkitRequestFullscreen();
-                }
+                }   //root.webkitRequestFullscreen();
             } catch (err) {
                 console.warn("Fullscreen failed:", err);
             }
@@ -499,6 +497,7 @@ window.onload = async function () {
                 console.warn("Wake lock failed:", err);
             }
 
+            console.log("Initialization complete");
             Pd4Web.init();
             const value = (Math.floor(Math.random() * 5) + 7) * 1000;
             lastArpejoTime = (value - 30) / 2;
@@ -509,7 +508,9 @@ window.onload = async function () {
                 el.style.display = "none";
             });
             vexFlowInit();
+            console.log("Score initialized");
             await startCompass();
+            console.log("Compass started");
             const seed = Math.floor(Math.random() * 2147483647);
             Pd4Web.sendFloat("luaseed", seed);
             Pd4Web.sendFloat("init", 1);
