@@ -45,10 +45,12 @@ function lerpAngle(start, end, t) {
     return normalize(start + diff * t);
 }
 
-// Extract absolute north heading from deviceorientation event
 function getAbsoluteNorth(event) {
 
-    // Detect platform
+    // --------------------------------------------------
+    // Platform detection
+    // --------------------------------------------------
+
     const ua = navigator.userAgent || navigator.vendor || window.opera;
 
     const isIOS =
@@ -57,46 +59,92 @@ function getAbsoluteNorth(event) {
 
     const isAndroid = /Android/.test(ua);
 
-    // ----------------------------
-    // iOS Safari
-    // ----------------------------
-    // webkitCompassHeading:
-    // 0 = North
-    // 90 = East
+    // --------------------------------------------------
+    // Screen orientation compensation
+    // --------------------------------------------------
+    // portrait            =>   0
+    // landscape left      =>  90
+    // landscape right     => -90 / 270
+    // upside down         => 180
+
+    let screenAngle = 0;
+
+    // Modern API
+    if (screen.orientation && typeof screen.orientation.angle === "number") {
+        screenAngle = screen.orientation.angle;
+    }
+
+    // iOS fallback
+    else if (typeof window.orientation === "number") {
+        screenAngle = window.orientation;
+    }
+
+    screenAngle = normalize(screenAngle);
+
+    // --------------------------------------------------
+    // iOS
+    // --------------------------------------------------
+    // webkitCompassHeading already references TRUE NORTH
+    // but DOES NOT compensate for screen orientation
+    // so we compensate manually
+
     if (isIOS && typeof event.webkitCompassHeading === "number") {
 
-        // Ignore invalid values
-        if (isNaN(event.webkitCompassHeading)) {
+        let heading = event.webkitCompassHeading;
+
+        if (isNaN(heading)) {
             return null;
         }
 
-        return normalize(event.webkitCompassHeading);
+        // compensate screen rotation
+        heading += screenAngle;
+
+        return normalize(heading);
     }
 
-    // ----------------------------
+    // --------------------------------------------------
     // Android
-    // ----------------------------
-    // alpha usually rotates opposite direction
+    // --------------------------------------------------
+    // alpha:
+    // 0 = device facing north
+    // rotation direction opposite visual compass
+    //
+    // Need:
+    // 1. invert alpha
+    // 2. compensate screen orientation
+
     if (isAndroid && event.alpha != null) {
 
-        if (isNaN(event.alpha)) {
+        let heading = event.alpha;
+
+        if (isNaN(heading)) {
             return null;
         }
 
-        return normalize(360 - event.alpha);
+        heading = 360 - heading;
+
+        // compensate screen orientation
+        heading += screenAngle;
+
+        return normalize(heading);
     }
 
-    // ----------------------------
-    // Fallback
-    // ----------------------------
-    // Try generic absolute alpha
+    // --------------------------------------------------
+    // Generic fallback
+    // --------------------------------------------------
     if (event.absolute === true && event.alpha != null) {
 
-        if (isNaN(event.alpha)) {
+        let heading = event.alpha;
+
+        if (isNaN(heading)) {
             return null;
         }
 
-        return normalize(360 - event.alpha);
+        heading = 360 - heading;
+
+        heading += screenAngle;
+
+        return normalize(heading);
     }
 
     return null;
@@ -231,10 +279,7 @@ function clearSVG() {
 function vexFlowInit() {
     clearSVG();
 
-    if (isPortrait()) {
-        alert("Por Favor, use modo paisagem para a obra");
-        return;
-    }
+
 
     const { width, height } = getVexSize();
 
@@ -491,6 +536,11 @@ window.onload = async function () {
 
     // Init
     document.getElementById("pd4web-init").onclick = async function () {
+        if (isPortrait()) {
+            alert("Por Favor, use modo paisagem para a obra");
+            return;
+        }
+
         try {
             const isApple =
                 /iPad|iPhone|iPod/.test(navigator.userAgent) ||
