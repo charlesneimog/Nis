@@ -450,8 +450,8 @@ window.onload = async function () {
 
             try {
                 if (!isiOS && navigator.platform !== "MacIntel") {
-                    await document.documentElement.requestFullscreen();
-                    await lockLandscape();
+                    document.documentElement.requestFullscreen();
+                    lockLandscape();
                 } else {
                     console.log("iOS detected, skipping fullscreen");
                 }
@@ -462,7 +462,7 @@ window.onload = async function () {
 
             try {
                 if (screen?.orientation?.lock) {
-                    await screen.orientation.lock("landscape");
+                    screen.orientation.lock("landscape");
                     console.log("Landscape locked");
                 }
             } catch (err) {
@@ -470,7 +470,7 @@ window.onload = async function () {
             }
 
             try {
-                await requestWakeLock();
+                requestWakeLock();
             } catch (err) {
                 console.warn("Wake lock failed:", err);
             }
@@ -487,7 +487,7 @@ window.onload = async function () {
             });
             vexFlowInit();
             console.log("Score initialized");
-            await startCompass();
+            startCompass();
             console.log("Compass started");
             const seed = Math.floor(Math.random() * 2147483647);
             Pd4Web.sendFloat("luaseed", seed);
