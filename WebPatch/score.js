@@ -19,115 +19,108 @@ var BASE_WIDTH = 600;
 //╭─────────────────────────────────────╮
 //│            ALWAYS NORTH             │
 //╰─────────────────────────────────────╯
-const rotating = document.getElementById("compass-rotating");
+// ──────────────────────────────────────────────────────────────
+// ALWAYS NORTH COMPASS — works on Android & iOS
+// Uses deviceorientation to get absolute heading (true north)
+// Smooth lerp animation, pivot from exact center
+// ──────────────────────────────────────────────────────────────
 
-let currentHeading = 0;
-let targetHeading = 0;
-let compassStarted = false;
+const rotatingElement = document.getElementById("compass-rotating");
 
-// ─────────────────────────────────────
+let currentHeading = 0;      // current visual rotation angle
+let targetHeading = 0;        // real north heading (0° = north)
+let compassActive = false;
+let animationId = null;
+
+// Normalize angle to [0, 360)
 function normalize(angle) {
-    return (angle % 360 + 360) % 360;
+    angle = angle % 360;
+    if (angle < 0) angle += 360;
+    return angle;
 }
 
-// ─────────────────────────────────────
-function lerpAngle(a, b, t) {
-    const diff = ((b - a + 540) % 360) - 180;
-    return normalize(a + diff * t);
+// Linear interpolation for angles (shortest path)
+function lerpAngle(start, end, t) {
+    const diff = ((end - start + 540) % 360) - 180;
+    return normalize(start + diff * t);
 }
 
-// ─────────────────────────────────────
-function extractHeading(event) {
-
-    // iOS Safari
+// Extract absolute north heading from deviceorientation event
+function getAbsoluteNorth(event) {
+    // iOS Safari: webkitCompassHeading (degrees clockwise from north)
     if (typeof event.webkitCompassHeading === "number") {
         return normalize(event.webkitCompassHeading);
     }
-
-    // Android absolute heading
-    if (event.absolute === true && event.alpha != null) {
-        return normalize(360 - event.alpha);
+    
+    // Android / modern browsers: absolute === true means alpha is north-referenced
+    // alpha: rotation around Z axis, 0 = north when absolute is true
+    if (event.absolute === true && event.alpha !== null && event.alpha !== undefined) {
+        return normalize(event.alpha);
     }
-
+    
     return null;
 }
 
-// ─────────────────────────────────────
-function updateCompass(event) {
-    const heading = extractHeading(event);
-
-    if (heading == null || isNaN(heading)) {
-        return;
+// Orientation event handler
+function onDeviceOrientation(event) {
+    if (!compassActive) return;
+    
+    const heading = getAbsoluteNorth(event);
+    if (heading !== null && !isNaN(heading)) {
+        targetHeading = heading;
     }
-
-    // TRUE NORTH / MAGNETIC NORTH ONLY
-    // no screen orientation compensation
-    targetHeading = heading;
 }
 
-// ─────────────────────────────────────
-function frame() {
-    currentHeading = lerpAngle(
-        currentHeading,
-        targetHeading,
-        0.12
-    );
-
-    rotating.style.rotate =
-        `${-currentHeading}deg`;
-
-    requestAnimationFrame(frame);
+// Animation loop — smooth rotation from center
+function animateCompass() {
+    if (!rotatingElement) return;
+    
+    // Smooth interpolation (0.12 gives natural following)
+    currentHeading = lerpAngle(currentHeading, targetHeading, 0.12);
+    
+    // Rotate the group by -currentHeading so North aligns with geographic north
+    rotatingElement.style.transform = `rotate(${-currentHeading}deg)`;
+    
+    animationId = requestAnimationFrame(animateCompass);
 }
 
-// ─────────────────────────────────────
+// Request permission (iOS required) and start compass
 async function startCompass() {
-    if (compassStarted) return;
-    compassStarted = true;
-
-    // iOS permission
-    if (
-        typeof DeviceOrientationEvent !== "undefined" &&
-        typeof DeviceOrientationEvent.requestPermission === "function"
-    ) {
+    // iOS 13+ requires explicit permission request from user gesture
+    if (typeof DeviceOrientationEvent !== "undefined" && 
+        typeof DeviceOrientationEvent.requestPermission === "function") {
         try {
-
-            const permission =
-                await DeviceOrientationEvent.requestPermission();
-
-            if (permission !== "granted") {
-                alert("Orientation permission denied");
-                return;
+            const permissionState = await DeviceOrientationEvent.requestPermission();
+            if (permissionState === "granted") {
+                startListening();
+            } else {
+                console.warn("Compass permission denied");
+                // fallback: show on screen but no alert to keep clean
             }
-
         } catch (err) {
-            console.error("Permission request failed:", err);
-            return;
+            console.error("Permission request error:", err);
         }
-    }
-
-    // iOS Safari usually uses deviceorientation
-    if ("ondeviceorientationabsolute" in window) {
-
-        window.addEventListener(
-            "deviceorientationabsolute",
-            updateCompass,
-            true
-        );
-
-        console.log("Using absolute compass");
-
     } else {
-
-        window.addEventListener(
-            "deviceorientation",
-            updateCompass,
-            true
-        );
-
-        console.log("Using standard compass");
+        // Android & desktop — start immediately
+        startListening();
     }
+}
 
-    frame();
+function startListening() {
+    if (compassActive) return;
+    compassActive = true;
+    
+    // Prefer deviceorientationabsolute (more accurate on Android)
+    if ("ondeviceorientationabsolute" in window) {
+        window.addEventListener("deviceorientationabsolute", onDeviceOrientation, true);
+    } else {
+        window.addEventListener("deviceorientation", onDeviceOrientation, true);
+    }
+    
+    // Start animation loop
+    if (animationId === null) {
+        animateCompass();
+    }
 }
 
 

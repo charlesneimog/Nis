@@ -172,23 +172,6 @@
                 display: block;
             }
 
-            #needle {
-                transform-origin: 50px 50px;
-                transition: transform 0.08s linear;
-                transform-origin: 100px 100px;
-                transform-box: view-box;
-            }
-
-            #compass-rotating {
-                position: absolute;
-                left: 50%;
-                top: 50%;
-
-                transform-origin: center center;
-
-                will-change: transform;
-            }
-
             .academic-button {
                 display: inline-flex;
                 align-items: center;
@@ -235,6 +218,38 @@
                 color: #666666;
                 text-align: right;
             }
+
+ /* minimal wrapper — just enough to hold the compass */
+        .compass-wrapper {
+            position: relative;
+            width: 10vw;
+            height: 10vw;
+            margin: auto;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            filter: drop-shadow(0 8px 20px rgba(0,0,0,0.3));
+        }
+
+        /* CRITICAL: rotating group positioned at exact center of 200x200 viewBox */
+        #compass-rotating {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform-origin: center center;
+            transform-box: fill-box;
+            will-change: transform;
+        }
+
+        /* needle pivot at viewBox center (100,100) */
+        #needle {
+            transform-origin: 100px 100px;
+            transform-box: view-box;
+        }
+
         </style>
     </head>
 
@@ -248,88 +263,36 @@
             <button id="pd4web-init" class="academic-button">Iniciar Obra</button>
         </div>
 
-        <div style="display: flex; justify-content: center; margin-top: 20px">
-            <svg
-                style="border: 1px"
-                id="compass"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 200 200"
-                width="100"
-                height="100"
-            >
-                <!-- STATIC RINGS -->
-                <circle cx="100" cy="100" r="90" fill="none" stroke="#333" stroke-width="8" />
+        <div class="compass-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+                <!-- STATIC RINGS (never rotate) -->
+                <circle cx="100" cy="100" r="90" fill="none" stroke="#2c3e44" stroke-width="8"/>
+                <circle cx="100" cy="100" r="82" fill="none" stroke="#5a7a84" stroke-width="2"/>
 
-                <circle cx="100" cy="100" r="82" fill="none" stroke="#ddd" stroke-width="2" />
-
-                <!-- EVERYTHING THAT ROTATES -->
+                <!-- ROTATING GROUP: always points north -->
                 <g id="compass-rotating">
-                    <!-- LETTERS -->
+                    <!-- Cardinal letters -->
+                    <text x="100" y="32" font-family="system-ui, sans-serif" font-weight="800" font-size="22" text-anchor="middle" fill="#FF5E5E">N</text>
+                    <text x="100" y="182" font-family="system-ui, sans-serif" font-weight="700" font-size="20" text-anchor="middle" fill="#5A9EFF">S</text>
+                    <text x="176" y="107" font-family="system-ui, sans-serif" font-weight="700" font-size="20" text-anchor="middle" fill="#6FCF97">E</text>
+                    <text x="24" y="107" font-family="system-ui, sans-serif" font-weight="700" font-size="20" text-anchor="middle" fill="#FFD966">W</text>
 
-                    <text
-                        x="100"
-                        y="35"
-                        font-family="sans-serif"
-                        font-weight="bold"
-                        font-size="20"
-                        text-anchor="middle"
-                        fill="#E53935"
-                    >
-                        N
-                    </text>
-
-                    <text
-                        x="100"
-                        y="180"
-                        font-family="sans-serif"
-                        font-weight="bold"
-                        font-size="20"
-                        text-anchor="middle"
-                        fill="#1565C0"
-                    >
-                        S
-                    </text>
-
-                    <text
-                        x="175"
-                        y="107"
-                        font-family="sans-serif"
-                        font-weight="bold"
-                        font-size="20"
-                        text-anchor="middle"
-                        fill="#43A047"
-                    >
-                        E
-                    </text>
-
-                    <text
-                        x="25"
-                        y="107"
-                        font-family="sans-serif"
-                        font-weight="bold"
-                        font-size="20"
-                        text-anchor="middle"
-                        fill="#FDD835"
-                    >
-                        W
-                    </text>
-
-                    <!-- NEEDLE -->
-
+                    <!-- Compass needle -->
                     <g id="needle">
-                        <path d="M100 100 L85 100 L100 40 Z" fill="#E53935" />
-
-                        <path d="M100 100 L115 100 L100 40 Z" fill="#C62828" />
-
-                        <path d="M100 100 L85 100 L100 160 Z" fill="#1E88E5" />
-
-                        <path d="M100 100 L115 100 L100 160 Z" fill="#1565C0" />
+                        <!-- North (red) -->
+                        <path d="M100 100 L87 100 L100 36 Z" fill="#E34234" stroke="#A02020" stroke-width="1"/>
+                        <path d="M100 100 L113 100 L100 36 Z" fill="#D32F2F" stroke="#A02020" stroke-width="1"/>
+                        <!-- South (blue) -->
+                        <path d="M100 100 L87 100 L100 164 Z" fill="#2A6F9C" stroke="#154e6e" stroke-width="1"/>
+                        <path d="M100 100 L113 100 L100 164 Z" fill="#1E5A7D" stroke="#154e6e" stroke-width="1"/>
+                        <!-- Center pivot -->
+                        <circle cx="100" cy="100" r="5" fill="#111" stroke="#ccc" stroke-width="1"/>
                     </g>
                 </g>
 
-                <!-- CENTER PIN -->
-                <circle cx="100" cy="100" r="6" fill="#333" />
-                <circle cx="100" cy="100" r="2" fill="#fff" />
+                <!-- STATIC center pin (always on top, not rotating) -->
+                <circle cx="100" cy="100" r="7" fill="#1e2a32" stroke="#c0d0dd" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="2.5" fill="#ecf5ff"/>
             </svg>
         </div>
 
