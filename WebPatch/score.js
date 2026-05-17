@@ -20,43 +20,87 @@ var BASE_WIDTH = 600;
 //│            ALWAYS NORTH             │
 //╰─────────────────────────────────────╯
 const rotating = document.getElementById("compass-rotating");
+
 let currentHeading = 0;
+let compassStarted = false;
+
+function normalize(angle) {
+    return (angle % 360 + 360) % 360;
+}
+
+function lerpAngle(a, b, t) {
+    let diff = ((b - a + 540) % 360) - 180;
+    return normalize(a + diff * t);
+}
 
 async function startCompass() {
+    if (compassStarted) return;
+    compassStarted = true;
+
     // iOS permission
     if (
         typeof DeviceOrientationEvent !== "undefined" &&
         typeof DeviceOrientationEvent.requestPermission === "function"
     ) {
-        const permission = await DeviceOrientationEvent.requestPermission();
+        const permission =
+            await DeviceOrientationEvent.requestPermission();
 
         if (permission !== "granted") {
-            alert("Permissão negada");
+            alert("Orientation permission denied");
             return;
         }
     }
 
+    let targetHeading = 0;
+
+    function updateCompass(event) {
+        let heading = null;
+
+        // iOS Safari
+        if (typeof event.webkitCompassHeading === "number") {
+            heading = event.webkitCompassHeading;
+        }
+
+        // Android / modern browsers
+        else if (event.absolute === true && event.alpha != null) {
+            heading = 360 - event.alpha;
+        }
+
+        if (heading == null || isNaN(heading)) {
+            return;
+        }
+
+        // compensate screen orientation
+        const screenAngle =
+            screen.orientation?.angle ||
+            window.orientation ||
+            0;
+
+        heading = normalize(heading - screenAngle);
+
+        targetHeading = heading;
+    }
+
     window.addEventListener(
-        "deviceorientation",
-        (event) => {
-            let heading = null;
-
-            // iPhone
-            if (event.webkitCompassHeading !== undefined) {
-                heading = event.webkitCompassHeading;
-            }
-
-            // Android
-            else if (event.alpha !== null) {
-                heading = 360 - event.alpha;
-            }
-
-            if (heading === null) return;
-
-            animateCompass(heading);
-        },
-        true,
+        "deviceorientationabsolute",
+        updateCompass,
+        true
     );
+
+    function frame() {
+        currentHeading = lerpAngle(
+            currentHeading,
+            targetHeading,
+            0.12
+        );
+
+        rotating.style.transform =
+            `translate(-50%, -50%) rotate(${-currentHeading}deg)`;
+
+        requestAnimationFrame(frame);
+    }
+
+    frame();
 }
 
 // ─────────────────────────────────────
@@ -90,27 +134,6 @@ function getCompassColor(angle) {
             return `rgba(${r}, ${g}, ${b}, 0.32)`;
         }
     }
-}
-
-// ─────────────────────────────────────
-function animateCompass(targetHeading) {
-    let delta = targetHeading - currentHeading;
-
-    if (delta > 180) delta -= 360;
-    if (delta < -180) delta += 360;
-
-    currentHeading += delta * 0.15;
-
-    rotating.style.transform = `rotate(${-currentHeading}deg)`;
-
-    const glow = getCompassColor(currentHeading);
-
-    vexscore.style.boxShadow = `
-        0 0 12px ${glow},
-        0 0 28px ${glow}
-    `;
-
-    requestAnimationFrame(() => animateCompass(targetHeading));
 }
 
 // ─────────────────────────────────────
