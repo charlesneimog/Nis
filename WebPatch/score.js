@@ -453,15 +453,17 @@ window.onload = async function () {
     // Init
     document.getElementById("pd4web-init").onclick = async function () {
         try {
-            const root = document.documentElement;
             const isiOS =
                 /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                 (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
             try {
-                if (root.requestFullscreen) {
-                    await root.requestFullscreen();
-                }   //root.webkitRequestFullscreen();
+                if (!isiOS) {
+                    await document.documentElement.requestFullscreen();
+                    await lockLandscape();
+                    
+                }
+                
             } catch (err) {
                 console.warn("Fullscreen failed:", err);
             }
