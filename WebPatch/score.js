@@ -47,17 +47,58 @@ function lerpAngle(start, end, t) {
 
 // Extract absolute north heading from deviceorientation event
 function getAbsoluteNorth(event) {
-    // iOS Safari: webkitCompassHeading (degrees clockwise from north)
-    if (typeof event.webkitCompassHeading === "number") {
+
+    // Detect platform
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+
+    const isIOS =
+        /iPad|iPhone|iPod/.test(ua) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+    const isAndroid = /Android/.test(ua);
+
+    // ----------------------------
+    // iOS Safari
+    // ----------------------------
+    // webkitCompassHeading:
+    // 0 = North
+    // 90 = East
+    if (isIOS && typeof event.webkitCompassHeading === "number") {
+
+        // Ignore invalid values
+        if (isNaN(event.webkitCompassHeading)) {
+            return null;
+        }
+
         return normalize(event.webkitCompassHeading);
     }
-    
-    // Android / modern browsers: absolute === true means alpha is north-referenced
-    // alpha: rotation around Z axis, 0 = north when absolute is true
-    if (event.absolute === true && event.alpha !== null && event.alpha !== undefined) {
-        return normalize(event.alpha);
+
+    // ----------------------------
+    // Android
+    // ----------------------------
+    // alpha usually rotates opposite direction
+    if (isAndroid && event.alpha != null) {
+
+        if (isNaN(event.alpha)) {
+            return null;
+        }
+
+        return normalize(360 - event.alpha);
     }
-    
+
+    // ----------------------------
+    // Fallback
+    // ----------------------------
+    // Try generic absolute alpha
+    if (event.absolute === true && event.alpha != null) {
+
+        if (isNaN(event.alpha)) {
+            return null;
+        }
+
+        return normalize(360 - event.alpha);
+    }
+
     return null;
 }
 
