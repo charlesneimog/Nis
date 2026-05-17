@@ -22,17 +22,64 @@ var BASE_WIDTH = 600;
 const rotating = document.getElementById("compass-rotating");
 
 let currentHeading = 0;
+let targetHeading = 0;
 let compassStarted = false;
 
+// ─────────────────────────────────────
 function normalize(angle) {
     return (angle % 360 + 360) % 360;
 }
 
+// ─────────────────────────────────────
 function lerpAngle(a, b, t) {
-    let diff = ((b - a + 540) % 360) - 180;
+    const diff = ((b - a + 540) % 360) - 180;
     return normalize(a + diff * t);
 }
 
+// ─────────────────────────────────────
+function extractHeading(event) {
+
+    // iOS Safari
+    if (typeof event.webkitCompassHeading === "number") {
+        return normalize(event.webkitCompassHeading);
+    }
+
+    // Android absolute heading
+    if (event.absolute === true && event.alpha != null) {
+        return normalize(360 - event.alpha);
+    }
+
+    return null;
+}
+
+// ─────────────────────────────────────
+function updateCompass(event) {
+    const heading = extractHeading(event);
+
+    if (heading == null || isNaN(heading)) {
+        return;
+    }
+
+    // TRUE NORTH / MAGNETIC NORTH ONLY
+    // no screen orientation compensation
+    targetHeading = heading;
+}
+
+// ─────────────────────────────────────
+function frame() {
+    currentHeading = lerpAngle(
+        currentHeading,
+        targetHeading,
+        0.12
+    );
+
+    rotating.style.rotate =
+        `${-currentHeading}deg`;
+
+    requestAnimationFrame(frame);
+}
+
+// ─────────────────────────────────────
 async function startCompass() {
     if (compassStarted) return;
     compassStarted = true;
@@ -42,100 +89,49 @@ async function startCompass() {
         typeof DeviceOrientationEvent !== "undefined" &&
         typeof DeviceOrientationEvent.requestPermission === "function"
     ) {
-        const permission =
-            await DeviceOrientationEvent.requestPermission();
+        try {
 
-        if (permission !== "granted") {
-            alert("Orientation permission denied");
+            const permission =
+                await DeviceOrientationEvent.requestPermission();
+
+            if (permission !== "granted") {
+                alert("Orientation permission denied");
+                return;
+            }
+
+        } catch (err) {
+            console.error("Permission request failed:", err);
             return;
         }
     }
 
-    let targetHeading = 0;
+    // iOS Safari usually uses deviceorientation
+    if ("ondeviceorientationabsolute" in window) {
 
-    function updateCompass(event) {
-        let heading = null;
-
-        // iOS Safari
-        if (typeof event.webkitCompassHeading === "number") {
-            heading = event.webkitCompassHeading;
-        }
-
-        // Android / modern browsers
-        else if (event.absolute === true && event.alpha != null) {
-            heading = 360 - event.alpha;
-        }
-
-        if (heading == null || isNaN(heading)) {
-            return;
-        }
-
-        // compensate screen orientation
-        const screenAngle =
-            screen.orientation?.angle ||
-            window.orientation ||
-            0;
-
-        heading = normalize(heading - screenAngle);
-
-        targetHeading = heading;
-    }
-
-    window.addEventListener(
-        "deviceorientationabsolute",
-        updateCompass,
-        true
-    );
-
-    function frame() {
-        currentHeading = lerpAngle(
-            currentHeading,
-            targetHeading,
-            0.12
+        window.addEventListener(
+            "deviceorientationabsolute",
+            updateCompass,
+            true
         );
 
-        rotating.style.transform =
-            `translate(-50%, -50%) rotate(${-currentHeading}deg)`;
+        console.log("Using absolute compass");
 
-        requestAnimationFrame(frame);
+    } else {
+
+        window.addEventListener(
+            "deviceorientation",
+            updateCompass,
+            true
+        );
+
+        console.log("Using standard compass");
     }
 
     frame();
 }
 
-// ─────────────────────────────────────
-const directionColors = [
-    { angle: 0, color: [229, 57, 53] }, // N
-    { angle: 90, color: [67, 160, 71] }, // E
-    { angle: 180, color: [21, 101, 192] }, // S
-    { angle: 270, color: [253, 216, 53] }, // W
-    { angle: 360, color: [229, 57, 53] }, // wrap to N
-];
 
-// ─────────────────────────────────────
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
-
-// ─────────────────────────────────────
-function getCompassColor(angle) {
-    angle = (angle + 360) % 360;
-
-    for (let i = 0; i < directionColors.length - 1; i++) {
-        const start = directionColors[i];
-        const end = directionColors[i + 1];
-
-        if (angle >= start.angle && angle <= end.angle) {
-            const t = (angle - start.angle) / (end.angle - start.angle);
-
-            const r = Math.round(lerp(start.color[0], end.color[0], t));
-            const g = Math.round(lerp(start.color[1], end.color[1], t));
-            const b = Math.round(lerp(start.color[2], end.color[2], t));
-            return `rgba(${r}, ${g}, ${b}, 0.32)`;
-        }
-    }
-}
-
+// Block update of website
 // ─────────────────────────────────────
 async function lockLandscape() {
     try {
