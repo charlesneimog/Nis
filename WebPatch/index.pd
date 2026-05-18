@@ -152,11 +152,8 @@
 #X connect 72 0 73 0; 
 #X connect 73 0 74 0; 
 #X connect 74 0 75 0; 
-#X connect 74 1 75 0; 
 #X connect 74 2 75 0; 
-#X connect 74 3 75 0; 
 #X connect 74 4 75 0; 
-#X connect 74 5 75 0; 
 #X connect 74 6 78 0; 
 #X connect 75 0 81 0; 
 #X connect 78 0 82 0; 
