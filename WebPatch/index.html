@@ -266,6 +266,14 @@
                 background: #eee;
                 transition: width 0.05s linear;
             }
+
+            #compass-container {
+                transition:
+                    box-shadow 180ms linear,
+                    border-color 180ms linear;
+                border-radius: 10px;
+                margin-bottom: 10px;
+            }
         </style>
     </head>
 
@@ -279,7 +287,7 @@
             <button id="pd4web-init" class="academic-button">Iniciar Obra</button>
         </div>
 
-        <div class="compass-wrapper">
+        <div id="compass-container" class="compass-wrapper">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
                 <!-- STATIC RINGS (never rotate) -->
                 <circle cx="100" cy="100" r="90" fill="none" stroke="#2c3e44" stroke-width="8" />

@@ -20,156 +20,120 @@ var BASE_WIDTH = 600;
 var isChord30 = false;
 
 //╭─────────────────────────────────────╮
-//│            ALWAYS NORTH             │
+//│               COMPASS               │
 //╰─────────────────────────────────────╯
-// ──────────────────────────────────────────────────────────────
-// ALWAYS NORTH COMPASS — works on Android & iOS
-// Uses deviceorientation to get absolute heading (true north)
-// Smooth lerp animation, pivot from exact center
-// ──────────────────────────────────────────────────────────────
-
+const colors = {
+    N: "#E53935", // red
+    S: "#1565C0", // blue
+    W: "#a89023", // amber/yellow
+    E: "#43A047", // green
+};
 const rotatingElement = document.getElementById("compass-rotating");
-
-let currentHeading = 0; // current visual rotation angle
-let targetHeading = 0; // real north heading (0° = north)
+let currentHeading = 0;
+let targetHeading = 0;
 let compassActive = false;
 let animationId = null;
 
-// Normalize angle to [0, 360)
+// ─────────────────────────────────────
 function normalize(angle) {
     angle = angle % 360;
     if (angle < 0) angle += 360;
     return angle;
 }
 
+// ─────────────────────────────────────
 // Linear interpolation for angles (shortest path)
 function lerpAngle(start, end, t) {
     const diff = ((end - start + 540) % 360) - 180;
     return normalize(start + diff * t);
 }
 
+// ─────────────────────────────────────
 function getAbsoluteNorth(event) {
-    // --------------------------------------------------
-    // Platform detection
-    // --------------------------------------------------
-
     const ua = navigator.userAgent || navigator.vendor || window.opera;
-
     const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
     const isAndroid = /Android/.test(ua);
-
-    // --------------------------------------------------
-    // Screen orientation compensation
-    // --------------------------------------------------
-    // portrait            =>   0
-    // landscape left      =>  90
-    // landscape right     => -90 / 270
-    // upside down         => 180
-
     let screenAngle = 0;
-
-    // Modern API
     if (screen.orientation && typeof screen.orientation.angle === "number") {
         screenAngle = screen.orientation.angle;
-    }
-
-    // iOS fallback
-    else if (typeof window.orientation === "number") {
+    } else if (typeof window.orientation === "number") {
         screenAngle = window.orientation;
     }
-
     screenAngle = normalize(screenAngle);
-
-    // --------------------------------------------------
-    // iOS
-    // --------------------------------------------------
-    // webkitCompassHeading already references TRUE NORTH
-    // but DOES NOT compensate for screen orientation
-    // so we compensate manually
-
     if (isIOS && typeof event.webkitCompassHeading === "number") {
         let heading = event.webkitCompassHeading;
-
         if (isNaN(heading)) {
             return null;
         }
-
-        // compensate screen rotation
         heading += screenAngle;
-
         return normalize(heading);
     }
-
-    // --------------------------------------------------
-    // Android
-    // --------------------------------------------------
-    // alpha:
-    // 0 = device facing north
-    // rotation direction opposite visual compass
-    //
-    // Need:
-    // 1. invert alpha
-    // 2. compensate screen orientation
 
     if (isAndroid && event.alpha != null) {
         let heading = event.alpha;
-
         if (isNaN(heading)) {
             return null;
         }
-
         heading = 360 - heading;
-
-        // compensate screen orientation
         heading += screenAngle;
-
         return normalize(heading);
     }
 
-    // --------------------------------------------------
-    // Generic fallback
-    // --------------------------------------------------
     if (event.absolute === true && event.alpha != null) {
         let heading = event.alpha;
-
         if (isNaN(heading)) {
             return null;
         }
-
         heading = 360 - heading;
-
         heading += screenAngle;
-
         return normalize(heading);
     }
-
     return null;
 }
 
+// ─────────────────────────────────────
+function headingToCardinal(heading) {
+    heading = normalize(heading);
+    if (heading >= 315 || heading < 45) {
+        return "N";
+    }
+    if (heading >= 45 && heading < 135) {
+        return "E";
+    }
+    if (heading >= 135 && heading < 225) {
+        return "S";
+    }
+    return "W";
+}
+
+// ─────────────────────────────────────
 // Orientation event handler
+const compassContainer = document.getElementById("compass-container");
+
 function onDeviceOrientation(event) {
     if (!compassActive) return;
-
     const heading = getAbsoluteNorth(event);
     if (heading !== null && !isNaN(heading)) {
         targetHeading = heading;
+        const cardinal = headingToCardinal(heading);
+        const color = colors[cardinal];
+        compassContainer.style.boxShadow = `
+            0 0 16px ${color}55,
+            0 6px 24px rgba(0,0,0,0.28)
+        `;
     }
 }
 
+// ─────────────────────────────────────
 // Animation loop — smooth rotation from center
 function animateCompass() {
     if (!rotatingElement) return;
-
-    // Smooth interpolation (0.12 gives natural following)
     currentHeading = lerpAngle(currentHeading, targetHeading, 0.12);
-
-    // Rotate the group by -currentHeading so North aligns with geographic north
     rotatingElement.style.transform = `rotate(${-currentHeading}deg)`;
-
     animationId = requestAnimationFrame(animateCompass);
 }
 
+// ─────────────────────────────────────
 // Request permission (iOS required) and start compass
 async function startCompass() {
     // iOS 13+ requires explicit permission request from user gesture
@@ -194,6 +158,7 @@ async function startCompass() {
     }
 }
 
+// ─────────────────────────────────────
 function startListening() {
     if (compassActive) return;
     compassActive = true;
@@ -211,8 +176,9 @@ function startListening() {
     }
 }
 
-// Block update of website
-// ─────────────────────────────────────
+//╭─────────────────────────────────────╮
+//│       Block update of website       │
+//╰─────────────────────────────────────╯
 async function lockLandscape() {
     try {
         // ANDROID
@@ -297,47 +263,6 @@ function vexFlowInit() {
 //╭─────────────────────────────────────╮
 //│            Draw Commands            │
 //╰─────────────────────────────────────╯
-function drawLonga(notes, dyn) {
-    const match = notes[0].match(/([A-G])([b#]*)(\d+)/);
-    const [, pitch, accidental, octave] = match;
-    const key = `${pitch.toLowerCase()}${accidental}/${octave}`;
-    const staveNote = new StaveNote({
-        keys: [key],
-        duration: "w",
-        auto_stem: true,
-    });
-
-    if (accidental) {
-        staveNote.addModifier(new Accidental(accidental), 0);
-    }
-
-    const voice = new Voice({
-        num_beats: 4,
-        beat_value: 4,
-    });
-
-    voice.addTickables([staveNote]);
-
-    new Formatter().joinVoices([voice]).formatToStave([voice], stave);
-    context.clear();
-    stave.setContext(context).draw();
-    voice.draw(context, stave);
-
-    const dynamic = new TextDynamics({
-        text: dyn,
-        duration: "w",
-        line: 10,
-    });
-
-    dynamic.setContext(context);
-    dynamic.setStave(stave);
-    dynamic.setTickContext(staveNote.getTickContext());
-    dynamic.setXShift(-4);
-    dynamic.preFormat();
-    dynamic.draw();
-}
-
-// ─────────────────────────────────────
 function drawArpejo(notes, dyn, time, point) {
     if (notes.length == 0) {
         return;
@@ -362,7 +287,7 @@ function drawArpejo(notes, dyn, time, point) {
     }
 
     // ADD FERMATA HERE
-    if (true) {
+    if (isChord30) {
         const lastNote = staveNotes[staveNotes.length - 1];
 
         const line = lastNote.getKeyProps()[0].line;
@@ -414,13 +339,6 @@ function drawArpejo(notes, dyn, time, point) {
         dynamic.draw();
     }
 
-    const colors = {
-        N: "#E53935", // red
-        S: "#1565C0", // blue
-        W: "#a89023", // amber/yellow
-        E: "#43A047", // green
-    };
-
     if (time > 0) {
         const svg = context.svg;
         if (!svg) return;
@@ -441,11 +359,17 @@ function drawArpejo(notes, dyn, time, point) {
     0 0 14px ${color}90,
     0 8px 24px rgba(0,0,0,0.32)
 `;
+
+    // compassContainer.style.boxShadow = `
+    //         0 0 8px ${color}55,
+    //         0 6px 8px rgba(0,0,0,0.28)
+    //     `;
 }
 
-// ─────────────────────────────────────
+//╭─────────────────────────────────────╮
+//│              NOT SLEEP              │
+//╰─────────────────────────────────────╯
 let wakeLock = null;
-let noSleepVideo = null;
 
 async function requestWakeLock() {
     // Preferred API (Android Chrome, some modern browsers)
