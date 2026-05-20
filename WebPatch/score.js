@@ -449,15 +449,16 @@ window.onload = async function () {
     Pd4Web.onFloatReceived("chordnumber", (_, f) => {
         if (f === 30) {
             isChord30 = true;
+            document.getElementById("chordnumber").textContent = "3a";
         } else {
             isChord30 = false;
+            document.getElementById("chordnumber").textContent = f;
         }
-
-        document.getElementById("chordnumber").textContent = f;
     });
 
     Pd4Web.onBangReceived("fim", (r) => {
         context.clear();
+        document.getElementById("chordnumber").textContent = "Fim! :)";
     });
 
     // Init
