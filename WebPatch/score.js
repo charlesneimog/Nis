@@ -6,6 +6,8 @@ import {
     Formatter,
     Accidental,
     TextDynamics,
+    Articulation,
+    Modifier,
 } from "https://cdn.jsdelivr.net/npm/vexflow@5.0.0/+esm";
 
 const mq = window.matchMedia("(orientation: portrait)");
@@ -15,6 +17,7 @@ var context = null;
 var stave = null;
 var scaleFactor = 0;
 var BASE_WIDTH = 600;
+var isChord30 = false;
 
 //╭─────────────────────────────────────╮
 //│            ALWAYS NORTH             │
@@ -27,8 +30,8 @@ var BASE_WIDTH = 600;
 
 const rotatingElement = document.getElementById("compass-rotating");
 
-let currentHeading = 0;      // current visual rotation angle
-let targetHeading = 0;        // real north heading (0° = north)
+let currentHeading = 0; // current visual rotation angle
+let targetHeading = 0; // real north heading (0° = north)
 let compassActive = false;
 let animationId = null;
 
@@ -46,16 +49,13 @@ function lerpAngle(start, end, t) {
 }
 
 function getAbsoluteNorth(event) {
-
     // --------------------------------------------------
     // Platform detection
     // --------------------------------------------------
 
     const ua = navigator.userAgent || navigator.vendor || window.opera;
 
-    const isIOS =
-        /iPad|iPhone|iPod/.test(ua) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
     const isAndroid = /Android/.test(ua);
 
@@ -89,7 +89,6 @@ function getAbsoluteNorth(event) {
     // so we compensate manually
 
     if (isIOS && typeof event.webkitCompassHeading === "number") {
-
         let heading = event.webkitCompassHeading;
 
         if (isNaN(heading)) {
@@ -114,7 +113,6 @@ function getAbsoluteNorth(event) {
     // 2. compensate screen orientation
 
     if (isAndroid && event.alpha != null) {
-
         let heading = event.alpha;
 
         if (isNaN(heading)) {
@@ -133,7 +131,6 @@ function getAbsoluteNorth(event) {
     // Generic fallback
     // --------------------------------------------------
     if (event.absolute === true && event.alpha != null) {
-
         let heading = event.alpha;
 
         if (isNaN(heading)) {
@@ -153,7 +150,7 @@ function getAbsoluteNorth(event) {
 // Orientation event handler
 function onDeviceOrientation(event) {
     if (!compassActive) return;
-    
+
     const heading = getAbsoluteNorth(event);
     if (heading !== null && !isNaN(heading)) {
         targetHeading = heading;
@@ -163,21 +160,23 @@ function onDeviceOrientation(event) {
 // Animation loop — smooth rotation from center
 function animateCompass() {
     if (!rotatingElement) return;
-    
+
     // Smooth interpolation (0.12 gives natural following)
     currentHeading = lerpAngle(currentHeading, targetHeading, 0.12);
-    
+
     // Rotate the group by -currentHeading so North aligns with geographic north
     rotatingElement.style.transform = `rotate(${-currentHeading}deg)`;
-    
+
     animationId = requestAnimationFrame(animateCompass);
 }
 
 // Request permission (iOS required) and start compass
 async function startCompass() {
     // iOS 13+ requires explicit permission request from user gesture
-    if (typeof DeviceOrientationEvent !== "undefined" && 
-        typeof DeviceOrientationEvent.requestPermission === "function") {
+    if (
+        typeof DeviceOrientationEvent !== "undefined" &&
+        typeof DeviceOrientationEvent.requestPermission === "function"
+    ) {
         try {
             const permissionState = await DeviceOrientationEvent.requestPermission();
             if (permissionState === "granted") {
@@ -198,20 +197,19 @@ async function startCompass() {
 function startListening() {
     if (compassActive) return;
     compassActive = true;
-    
+
     // Prefer deviceorientationabsolute (more accurate on Android)
     if ("ondeviceorientationabsolute" in window) {
         window.addEventListener("deviceorientationabsolute", onDeviceOrientation, true);
     } else {
         window.addEventListener("deviceorientation", onDeviceOrientation, true);
     }
-    
+
     // Start animation loop
     if (animationId === null) {
         animateCompass();
     }
 }
-
 
 // Block update of website
 // ─────────────────────────────────────
@@ -242,9 +240,7 @@ async function lockLandscape() {
         } else {
             console.log("Orientation lock API not supported");
         }
-    } catch (err) {
-      
-    }
+    } catch (err) {}
 }
 
 // ─────────────────────────────────────
@@ -278,8 +274,6 @@ function clearSVG() {
 // ─────────────────────────────────────
 function vexFlowInit() {
     clearSVG();
-
-
 
     const { width, height } = getVexSize();
 
@@ -367,6 +361,23 @@ function drawArpejo(notes, dyn, time, point) {
         staveNotes.push(note);
     }
 
+    // ADD FERMATA HERE
+    if (true) {
+        const lastNote = staveNotes[staveNotes.length - 1];
+
+        const line = lastNote.getKeyProps()[0].line;
+
+        const isHigh = line >= 4;
+
+        const fermata = new Articulation(isHigh ? "a@u" : "a@a");
+
+        // 3 = above
+        // 4 = below
+        fermata.setPosition(isHigh ? 4 : 3);
+
+        lastNote.addModifier(fermata, 0);
+    }
+
     const voice = new Voice({
         num_beats: staveNotes.length,
         beat_value: 4,
@@ -406,7 +417,7 @@ function drawArpejo(notes, dyn, time, point) {
     const colors = {
         N: "#E53935", // red
         S: "#1565C0", // blue
-        W: "#FDD835", // amber/yellow
+        W: "#a89023", // amber/yellow
         E: "#43A047", // green
     };
 
@@ -423,16 +434,13 @@ function drawArpejo(notes, dyn, time, point) {
             }, time * i);
         }
     }
-}
 
-// ─────────────────────────────────────
-function drawTrilo(notes, dyn, tipo) {}
-
-// ─────────────────────────────────────
-function drawNote(notes, dyn, tipo) {
-    if (tipo == "longa") {
-        drawLonga(notes, dyn);
-    }
+    const score = document.getElementById("vexscore");
+    const color = colors[point];
+    score.style.boxShadow = `
+    0 0 14px ${color}90,
+    0 8px 24px rgba(0,0,0,0.32)
+`;
 }
 
 // ─────────────────────────────────────
@@ -463,20 +471,6 @@ async function requestWakeLock() {
 
 // ─────────────────────────────────────
 function enableIOSWakeLock() {}
-
-// ─────────────────────────────────────
-async function releaseWakeLock() {
-    if (wakeLock) {
-        await wakeLock.release();
-        wakeLock = null;
-    }
-
-    if (noSleepVideo) {
-        noSleepVideo.pause();
-        noSleepVideo.remove();
-        noSleepVideo = null;
-    }
-}
 
 //╭─────────────────────────────────────╮
 //│                Init                 │
@@ -523,12 +517,20 @@ window.onload = async function () {
     });
 
     // GUI
-    Pd4Web.onFloatReceived("bar", (_, f) => {
-        // const el = document.getElementById("bar");
-        // el.style.width = f + "%";
+    Pd4Web.onFloatReceived("bar-width", (_, f) => {
+        const el = document.getElementById("bar");
+        el.style.width = f * 100 + "%";
     });
 
-    Pd4Web.onFloatReceived("chordnumber", (_, f) => {});
+    Pd4Web.onFloatReceived("chordnumber", (_, f) => {
+        if (f === 30) {
+            isChord30 = true;
+        } else {
+            isChord30 = false;
+        }
+
+        document.getElementById("chordnumber").textContent = f;
+    });
 
     Pd4Web.onBangReceived("fim", (r) => {
         context.clear();
@@ -558,7 +560,6 @@ window.onload = async function () {
                 } else {
                     console.log("iOS detected, skipping fullscreen");
                 }
-                
             } catch (err) {
                 console.warn("Fullscreen failed:", err);
             }
@@ -580,6 +581,7 @@ window.onload = async function () {
 
             console.log("Initialization complete");
             Pd4Web.init();
+
             const value = (Math.floor(Math.random() * 5) + 7) * 1000;
             lastArpejoTime = (value - 30) / 2;
             Pd4Web.sendFloat("gesture-time", value);
