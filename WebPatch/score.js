@@ -468,6 +468,8 @@ window.onload = async function () {
             return;
         }
 
+        document.getElementById("nis-text").style.display = "none";
+
         try {
             const isApple =
                 /iPad|iPhone|iPod/.test(navigator.userAgent) ||
